@@ -16,6 +16,9 @@ type RestaurantService interface {
 	AddRestaurant(req *restodto.AddRestaurantDTO) (*resto.Restaurant, error)
 	GetRestaurants(page, limit int64) ([]*resto.Restaurant, error)
 	GetRestaurant(req string) (*resto.Restaurant, error)
+	UpdateRestaurantAddress(req *restodto.Address) error
+	UpdateRestaurantContact(req *restodto.Contact) error
+	UpdateRestaurant(req *restodto.AddRestaurantDTO) error
 
 	AddRegistrationDetails(req *restodto.RegistrationDetailsDTO) error
 	AddPaymentDetails(req restodto.PaymentDetails) error
@@ -52,6 +55,7 @@ func (r *restoService) AddRestaurant(req *restodto.AddRestaurantDTO) (*resto.Res
 	args.CuisineTypes = req.CuisineTypes
 	args.OpenTime = req.OpenTime
 	args.CloseTime = req.CloseTime
+	args.IsVerified = false
 	args.CreatedAt = time.Now()
 	args.UpdatedAt = time.Now()
 
@@ -64,6 +68,57 @@ func (r *restoService) AddRestaurant(req *restodto.AddRestaurantDTO) (*resto.Res
 		return nil, err
 	}
 	return resto, nil
+}
+
+func (r *restoService) UpdateRestaurantAddress(req *restodto.Address) error {
+	args := resto.Address{
+		AddressLine1: req.AddressLine1,
+		State:        req.State,
+		City:         req.City,
+		PinCode:      req.PinCode,
+		Latitude:     req.Latitude,
+		Longitude:    req.Longitude,
+	}
+
+	objId, err := primitive.ObjectIDFromHex(req.RestaurantId)
+
+	if err != nil {
+		return errors.New("invalid id found")
+	}
+
+	return r.restoRepo.UpdateRestaurantAddress(args, objId)
+}
+
+func (r *restoService) UpdateRestaurantContact(req *restodto.Contact) error {
+	args := resto.Contact{
+		MobileNumber: req.MobileNumber,
+		EmailId:      req.EmailId,
+	}
+
+	objId, err := primitive.ObjectIDFromHex(req.RestaurantId)
+
+	if err != nil {
+		return errors.New("invalid id found")
+	}
+
+	return r.restoRepo.UpdateRestaurantContact(args, objId)
+}
+
+func (r *restoService) UpdateRestaurant(req *restodto.AddRestaurantDTO) error {
+	args := resto.Restaurant{
+		Name:         req.Name,
+		CuisineTypes: req.CuisineTypes,
+		OpenTime:     req.OpenTime,
+		CloseTime:    req.CloseTime,
+	}
+
+	objId, err := primitive.ObjectIDFromHex(req.RestaurantId)
+
+	if err != nil {
+		return errors.New("invalid id found")
+	}
+
+	return r.restoRepo.UpdateRestaurant(args, objId)
 }
 
 func (r *restoService) GetRestaurants(page, limit int64) ([]*resto.Restaurant, error) {

@@ -16,6 +16,9 @@ type RestaurantController interface {
 	AddRestaurant(ctx *gin.Context)
 	GetRestaurants(ctx *gin.Context)
 	GetRestaurant(ctx *gin.Context)
+	UpdateRestaurantAddress(ctx *gin.Context)
+	UpdateRestaurantContact(ctx *gin.Context)
+	UpdateRestaurant(ctx *gin.Context)
 
 	AddRegistrationDetails(ctx *gin.Context)
 	AddPaymentDetails(ctx *gin.Context)
@@ -149,5 +152,62 @@ func (r *restoController) AddPaymentDetails(ctx *gin.Context) {
 	}
 
 	res := utils.BuildSuccessResponse("payment details has been addedd", nil)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (r *restoController) UpdateRestaurantAddress(ctx *gin.Context) {
+	req := new(restodto.Address)
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		res := utils.BuildFailedResponse(err.Error())
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	if err := r.restoService.UpdateRestaurantAddress(req); err != nil {
+		res := utils.BuildFailedResponse(err.Error())
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := utils.BuildSuccessResponse("restaurant address update successfully", nil)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (r *restoController) UpdateRestaurantContact(ctx *gin.Context) {
+	req := new(restodto.Contact)
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		res := utils.BuildFailedResponse(err.Error())
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	if err := r.restoService.UpdateRestaurantContact(req); err != nil {
+		res := utils.BuildFailedResponse(err.Error())
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := utils.BuildSuccessResponse("restaurant contact update successfully", nil)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (r *restoController) UpdateRestaurant(ctx *gin.Context) {
+	req := new(restodto.AddRestaurantDTO)
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		res := utils.BuildFailedResponse(err.Error())
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	if err := r.restoService.UpdateRestaurant(req); err != nil {
+		res := utils.BuildFailedResponse(err.Error())
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := utils.BuildSuccessResponse("restaurant update successfully", nil)
 	ctx.JSON(http.StatusOK, res)
 }

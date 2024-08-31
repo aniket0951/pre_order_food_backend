@@ -1,6 +1,7 @@
 package restodto
 
 type Address struct {
+	RestaurantId string  `json:"id"`
 	AddressLine1 string  `json:"address_line_1" validate:"required"`
 	City         string  `json:"city" validate:"required"`
 	State        string  `json:"state" validate:"required"`
@@ -10,11 +11,14 @@ type Address struct {
 }
 
 type Contact struct {
+	RestaurantId string `json:"id"`
+
 	MobileNumber []string `json:"mobile_number" validate:"required"`
 	EmailId      string   `json:"email_id" validate:"required,email"`
 }
 
 type AddRestaurantDTO struct {
+	RestaurantId string   `json:"id"`
 	Name         string   `json:"name" validate:"required,min=4"`
 	CuisineTypes []string `json:"cuisine_types" validate:"required"`
 	Address      Address  `json:"address" validate:"required"`

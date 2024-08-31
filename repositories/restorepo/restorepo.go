@@ -24,6 +24,9 @@ type RestaurantRepository interface {
 	AddRestaurant(args *md.Restaurant) (*md.Restaurant, error)
 	GetRestaurants(page, limit int64) ([]*md.Restaurant, error)
 	GetRestaurant(args interface{}) (*md.Restaurant, error)
+	UpdateRestaurantAddress(args md.Address, restoId primitive.ObjectID) error
+	UpdateRestaurantContact(args md.Contact, restoId primitive.ObjectID) error
+	UpdateRestaurant(args md.Restaurant, restoId primitive.ObjectID) error
 
 	AddRegistrationDetails(args md.RegistrationDetails, restoId primitive.ObjectID) error
 	AddPaymentDetails(args md.PaymentDetails, restoId primitive.ObjectID) error
@@ -127,6 +130,81 @@ func (rr *restoRepo) AddPaymentDetails(args md.PaymentDetails, restoId primitive
 
 	if result.MatchedCount == 0 || result.ModifiedCount == 0 {
 		return errors.New("failed to add payment details")
+	}
+	return nil
+}
+
+func (rr *restoRepo) UpdateRestaurantAddress(args md.Address, restoId primitive.ObjectID) error {
+	filter := bson.M{
+		"_id": restoId,
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"address":    args,
+			"updated_at": time.Now(),
+		},
+	}
+
+	result, err := rr.restoCollection.UpdateOne(context.Background(), filter, update)
+
+	if err != nil {
+		return err
+	}
+
+	if result.ModifiedCount == 0 {
+		return errors.New("failed to update address")
+	}
+	return nil
+}
+
+func (rr *restoRepo) UpdateRestaurantContact(args md.Contact, restoId primitive.ObjectID) error {
+	filter := bson.M{
+		"_id": restoId,
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"contact":    args,
+			"updated_at": time.Now(),
+		},
+	}
+
+	result, err := rr.restoCollection.UpdateOne(context.Background(), filter, update)
+
+	if err != nil {
+		return err
+	}
+
+	if result.ModifiedCount == 0 {
+		return errors.New("failed to update address")
+	}
+	return nil
+}
+
+func (rr *restoRepo) UpdateRestaurant(args md.Restaurant, restoId primitive.ObjectID) error {
+	filter := bson.M{
+		"_id": restoId,
+	}
+
+	update := bson.M{
+		"$set": bson.M{
+			"name":          args.Name,
+			"cuisine_types": args.CuisineTypes,
+			"open_time":     args.OpenTime,
+			"close_time":    args.CloseTime,
+			"updated_at":    time.Now(),
+		},
+	}
+
+	result, err := rr.restoCollection.UpdateOne(context.Background(), filter, update)
+
+	if err != nil {
+		return err
+	}
+
+	if result.ModifiedCount == 0 {
+		return errors.New("failed to update address")
 	}
 	return nil
 }

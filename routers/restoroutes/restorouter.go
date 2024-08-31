@@ -22,6 +22,10 @@ func RestaurantRouter(engine *gin.Engine) {
 		resto.GET("/getrestaurants", restoController.GetRestaurants)
 		resto.GET("/getrestaurant/:tag", restoController.GetRestaurant)
 
+		resto.PUT("/restaurant", restoController.UpdateRestaurant)
+		resto.PUT("/address", restoController.UpdateRestaurantAddress)
+		resto.PUT("/contact", restoController.UpdateRestaurantContact)
+
 	}
 
 	resto_registration := engine.Group("/api/resto")
