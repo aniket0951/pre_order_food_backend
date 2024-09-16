@@ -16,7 +16,10 @@ type RestaurantController interface {
 	AddRestaurant(ctx *gin.Context)
 	GetRestaurants(ctx *gin.Context)
 	GetRestaurant(ctx *gin.Context)
+	AddRestaurantAddress(ctx *gin.Context)
 	UpdateRestaurantAddress(ctx *gin.Context)
+
+	AddRestaurantContact(ctx *gin.Context)
 	UpdateRestaurantContact(ctx *gin.Context)
 	UpdateRestaurant(ctx *gin.Context)
 
@@ -53,7 +56,7 @@ func (r *restoController) AddRestaurant(ctx *gin.Context) {
 		return
 	}
 
-	_, err = r.restoService.AddRestaurant(&req)
+	err = r.restoService.AddRestaurant(&req)
 
 	if err != nil {
 		log.Info("Error from service : ", err)
@@ -155,7 +158,7 @@ func (r *restoController) AddPaymentDetails(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-func (r *restoController) UpdateRestaurantAddress(ctx *gin.Context) {
+func (r *restoController) AddRestaurantAddress(ctx *gin.Context) {
 	req := new(restodto.Address)
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -164,7 +167,7 @@ func (r *restoController) UpdateRestaurantAddress(ctx *gin.Context) {
 		return
 	}
 
-	if err := r.restoService.UpdateRestaurantAddress(req); err != nil {
+	if err := r.restoService.AddRestaurantAddress(req); err != nil {
 		res := utils.BuildFailedResponse(err.Error())
 		ctx.JSON(http.StatusBadRequest, res)
 		return
@@ -174,7 +177,29 @@ func (r *restoController) UpdateRestaurantAddress(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-func (r *restoController) UpdateRestaurantContact(ctx *gin.Context) {
+func (r *restoController) UpdateRestaurantAddress(ctx *gin.Context) {
+	req := new(restodto.Address)
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		res := utils.BuildFailedResponse(err.Error())
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	if err := r.restoService.UpdteRestaurantAddress(req); err != nil {
+		res := utils.BuildFailedResponse(err.Error())
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := utils.BuildSuccessResponse("restaurant address update successfully", nil)
+	ctx.JSON(http.StatusOK, res)
+}
+
+/* -------------------------------------------------------------------------- */
+/*                             Restaurant Contact                             */
+/* -------------------------------------------------------------------------- */
+func (r *restoController) AddRestaurantContact(ctx *gin.Context) {
 	req := new(restodto.Contact)
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -183,13 +208,32 @@ func (r *restoController) UpdateRestaurantContact(ctx *gin.Context) {
 		return
 	}
 
-	if err := r.restoService.UpdateRestaurantContact(req); err != nil {
+	if err := r.restoService.AddRestaurantContact(req); err != nil {
 		res := utils.BuildFailedResponse(err.Error())
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	res := utils.BuildSuccessResponse("restaurant contact update successfully", nil)
+	res := utils.BuildSuccessResponse("restaurant contact added successfully", nil)
+	ctx.JSON(http.StatusOK, res)
+}
+func (r *restoController) UpdateRestaurantContact(ctx *gin.Context) {
+	var req restodto.Contact
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		res := utils.BuildFailedResponse(err.Error())
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	err := r.restoService.UpdateRestaurantContact(&req)
+	if err != nil {
+		res := utils.BuildFailedResponse(err.Error())
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := utils.BuildSuccessResponse("restaurant payment update successfully", nil)
 	ctx.JSON(http.StatusOK, res)
 }
 

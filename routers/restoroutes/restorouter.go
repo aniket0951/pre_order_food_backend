@@ -23,7 +23,10 @@ func RestaurantRouter(engine *gin.Engine) {
 		resto.GET("/getrestaurant/:tag", restoController.GetRestaurant)
 
 		resto.PUT("/restaurant", restoController.UpdateRestaurant)
+		resto.POST("/address", restoController.AddRestaurantAddress)
 		resto.PUT("/address", restoController.UpdateRestaurantAddress)
+
+		resto.POST("/contact", restoController.AddRestaurantContact)
 		resto.PUT("/contact", restoController.UpdateRestaurantContact)
 
 	}
@@ -32,5 +35,6 @@ func RestaurantRouter(engine *gin.Engine) {
 	{
 		resto_registration.POST("/registration", restoController.AddRegistrationDetails)
 		resto_registration.POST("/payment", restoController.AddPaymentDetails)
+		resto_registration.PUT("/payment", restoController.UpdateRestaurantContact)
 	}
 }
