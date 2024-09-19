@@ -29,7 +29,7 @@ type MenuRepository interface {
 	ListItesmsByMenuCard(menuCardID uuid.UUID) ([]model.Item, error)
 
 	AddItemPrice(args model.ItemPrice) (model.ItemPrice, error)
-	RemoveItemPrice(itemID uuid.UUID) error
+	RemoveItemPrice(itemID, priceID uuid.UUID) error
 }
 
 /* -------------------------------------------------------------------------- */
@@ -121,6 +121,6 @@ func (g *menuGorm) AddItemPrice(args model.ItemPrice) (model.ItemPrice, error) {
 	args.ID = uuid.New()
 	return args, g.db.Create(&args).Error
 }
-func (g *menuGorm) RemoveItemPrice(itemID uuid.UUID) error {
-	return g.db.Where("item_id = ?", itemID).Delete(&model.ItemPrice{}).Error
+func (g *menuGorm) RemoveItemPrice(itemID, priceID uuid.UUID) error {
+	return g.db.Where("item_id = ? and id = ?", itemID, priceID).Delete(&model.ItemPrice{}).Error
 }

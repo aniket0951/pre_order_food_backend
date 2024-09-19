@@ -88,3 +88,23 @@ func (c *menuController) AddItemPrice(ctx *gin.Context) {
 	response := utils.BuildSuccessResponse("item price has been added", nil)
 	ctx.JSON(http.StatusOK, response)
 }
+func (c *menuController) RemoveItemPrice(ctx *gin.Context) {
+	var req restodto.RemoveItemPriceDTO
+
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		response := utils.BuildFailedResponse(err.Error())
+		ctx.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	err := c.menuSvc.RemoveItemPrice(req)
+
+	if err != nil {
+		response := utils.BuildFailedResponse(err.Error())
+		ctx.JSON(http.StatusUnprocessableEntity, response)
+		return
+	}
+
+	response := utils.BuildSuccessResponse("Item price has been removed", nil)
+	ctx.JSON(http.StatusOK, response)
+}

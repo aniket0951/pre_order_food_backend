@@ -19,7 +19,9 @@ type MenuController interface {
 	CreateItem(ctx *gin.Context)
 	UpdateItem(ctx *gin.Context)
 	ListItesmsByMenuCard(ctx *gin.Context)
+
 	AddItemPrice(ctx *gin.Context)
+	RemoveItemPrice(ctx *gin.Context)
 
 	ListCategory(ctx *gin.Context)
 }

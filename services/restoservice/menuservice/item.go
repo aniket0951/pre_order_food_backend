@@ -223,10 +223,23 @@ func (s *menuService) AddItemPrice(req restodto.CreateItemPriceDTO) error {
 	_, err = s.menuRepo.UpdateItem(item)
 	if err != nil {
 		// remove created price
-		if err := s.menuRepo.RemoveItemPrice(objId); err != nil {
+		if err := s.menuRepo.RemoveItemPrice(objId, itemPrice.ID); err != nil {
 			return err
 		}
 		return err
 	}
 	return nil
+}
+func (s *menuService) RemoveItemPrice(req restodto.RemoveItemPriceDTO) error {
+	itemObjID, err := uuid.Parse(req.ItemID)
+	if err != nil {
+		return errors.New("invalid id")
+	}
+	// ID == itemPriceID
+	itemPriceID, err := uuid.Parse(req.ItemPriceID)
+	if err != nil {
+		return errors.New("invalid id")
+	}
+
+	return s.menuRepo.RemoveItemPrice(itemObjID, itemPriceID)
 }

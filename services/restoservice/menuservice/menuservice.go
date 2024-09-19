@@ -33,6 +33,7 @@ type MenuService interface {
 
 	/* -------------------------------- ItemPrice ------------------------------- */
 	AddItemPrice(req restodto.CreateItemPriceDTO) error
+	RemoveItemPrice(req restodto.RemoveItemPriceDTO) error
 }
 
 /* -------------------------------------------------------------------------- */

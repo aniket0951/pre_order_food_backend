@@ -49,6 +49,14 @@ type CreateItemPriceDTO struct {
 	Price  float64 `json:"price" validate:"required"`
 }
 
+/* -------------------------------------------------------------------------- */
+/*                             RemoveItemPriceDTO                             */
+/* -------------------------------------------------------------------------- */
+type RemoveItemPriceDTO struct {
+	ItemID      string `json:"item_id" validate:"required"`
+	ItemPriceID string `json:"id" validate:"required"`
+}
+
 type ItemObject struct {
 	ID          uuid.UUID         `json:"id"`
 	Name        string            `json:"name"`

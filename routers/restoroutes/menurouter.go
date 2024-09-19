@@ -41,5 +41,6 @@ func MenuRouter(router *gin.Engine) {
 	itemPrice := router.Group("api/item")
 	{
 		itemPrice.POST("/create-price", menuController.AddItemPrice)
+		itemPrice.DELETE("/remove-price", menuController.RemoveItemPrice)
 	}
 }
