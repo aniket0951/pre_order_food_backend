@@ -46,7 +46,7 @@ jobs:
           
       - name: Create UUID Function
         run: |
-          echo "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";" | psql -h localhost -U testuser -d testdb
+          echo "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";" | psql -h localhost -U postgres -d pre_order_food
 
       - name: Checkout Migration Repo
         uses: actions/checkout@v2
