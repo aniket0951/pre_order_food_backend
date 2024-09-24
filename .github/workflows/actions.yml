@@ -45,10 +45,6 @@ jobs:
         with:
           go-version: "1.23"  
 
-      - name: Create UUID Function
-        run: |
-          echo "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";" | psql -h localhost -U testuser -d testdb
-
       - name: Checkout Migration Repo
         uses: actions/checkout@v2
         with:
