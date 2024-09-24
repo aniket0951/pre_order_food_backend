@@ -52,7 +52,7 @@ jobs:
           path: pre_order_food_migrations
 
       - name: run migrations
-        run: pwd && cd pre_order_food_migrations && ls -la && cp .env && go mod tidy && go run main.go migrate && go run main.go seed
+        run: pwd && cd pre_order_food_migrations && go mod tidy && go run main.go migrate && go run main.go seed
 
 
       - name: Install project dependenies
