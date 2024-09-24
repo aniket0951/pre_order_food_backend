@@ -1,5 +1,14 @@
 package utils
 
+import (
+	"fmt"
+	"net/http"
+	"strings"
+
+	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
+)
+
 type Response struct {
 	Status       bool        `json:"status,omitempty"`
 	Message      string      `json:"message,omitempty"`
@@ -24,4 +33,21 @@ func BuildFailedResponse(errorMsg string) Response {
 	}
 
 	return response
+}
+
+// UUID with prefix without -
+func UUIDWithPrefix(prefix string) string {
+	id := uuid.New().String()
+	id = prefix + "_" + id
+	id = strings.ReplaceAll(id, "-", "")
+	return id
+}
+
+func IsValidaUUID(ctx *gin.Context, id, tag string) uuid.UUID {
+	objID, err := uuid.Parse(id)
+	if err != nil {
+		response := BuildFailedResponse(fmt.Sprintf("invalid %s id", tag))
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, response)
+	}
+	return objID
 }

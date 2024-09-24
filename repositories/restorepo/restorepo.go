@@ -1,210 +1,135 @@
 package restorepo
 
 import (
-	"context"
 	"errors"
-	"pre_order_food_resto_module/config"
-	"time"
+	"pre_order_food_resto_module/connections"
 
 	md "pre_order_food_resto_module/model/resto"
 
-	log "github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-)
-
-var (
-	restoConnection = config.GetCollection("restaurant")
 )
 
 type RestaurantRepository interface {
-	AddRestaurant(args *md.Restaurant) (*md.Restaurant, error)
+	AddRestaurant(args *md.Restaurant) error
 	GetRestaurants(page, limit int64) ([]*md.Restaurant, error)
-	GetRestaurant(args interface{}) (*md.Restaurant, error)
-	UpdateRestaurantAddress(args md.Address, restoId primitive.ObjectID) error
-	UpdateRestaurantContact(args md.Contact, restoId primitive.ObjectID) error
+	GetRestaurant(args interface{}, isUUID bool) (*md.Restaurant, error)
+	AddRestaurantAddress(args *md.Address) error
+	UpdteRestaurantAddress(args *md.Address) error
+
+	AddRestaurantContact(args md.Contact) error
+	UpdateRestaurantContact(args md.Contact) error
 	UpdateRestaurant(args md.Restaurant, restoId primitive.ObjectID) error
 
-	AddRegistrationDetails(args md.RegistrationDetails, restoId primitive.ObjectID) error
-	AddPaymentDetails(args md.PaymentDetails, restoId primitive.ObjectID) error
+	AddRegistrationDetails(args md.RegistrationDetails) error
+
+	AddPaymentDetails(args md.PaymentDetails) error
+	UpdatePaymentDetails(args md.PaymentDetails) (md.PaymentDetails, error)
 }
 
 type restoRepo struct {
-	restoCollection *mongo.Collection
+	db *gorm.DB
 }
 
 func NewRestaurantRepository() RestaurantRepository {
-	if err := config.CreateUniqueIndex(restoConnection, "name"); err != nil {
-		log.Error("Error while creating index : ", err)
-	}
 	return &restoRepo{
-		restoCollection: restoConnection,
+		db: connections.DB(),
 	}
 }
 
-func (rr *restoRepo) AddRestaurant(args *md.Restaurant) (*md.Restaurant, error) {
-
-	obj, err := rr.restoCollection.InsertOne(context.Background(), &args)
-	if err != nil {
-		return nil, err
-	}
-	if _, ok := obj.InsertedID.(primitive.ObjectID); ok {
-		args.ID = obj.InsertedID.(primitive.ObjectID)
-	}
-	return args, nil
+func (rr *restoRepo) AddRestaurant(args *md.Restaurant) error {
+	return rr.db.Create(&args).Error
 }
 
 func (rr *restoRepo) GetRestaurants(page, limit int64) ([]*md.Restaurant, error) {
-	opts := options.Find()
-	opts.SetSkip(page)
-	opts.SetLimit(limit)
-
-	cursor, err := rr.restoCollection.Find(context.Background(), bson.M{}, opts)
-	if err != nil {
-		return nil, err
-	}
-
-	var result []*md.Restaurant
-	if err := cursor.All(context.Background(), &result); err != nil {
-		return nil, err
-	}
-	return result, nil
+	var restaurants []*md.Restaurant
+	err := rr.db.Offset(int(page)).Limit(int(limit)).Find(&restaurants)
+	return restaurants, err.Error
 }
 
-func (rr *restoRepo) GetRestaurant(args interface{}) (*md.Restaurant, error) {
-	filter := bson.M{
-		"$or": []bson.M{
-			{"_id": args},
-			{"name": args},
-		},
-	}
+func (rr *restoRepo) GetRestaurant(args interface{}, isUUID bool) (*md.Restaurant, error) {
 	result := new(md.Restaurant)
-	err := rr.restoCollection.FindOne(context.Background(), filter).Decode(&result)
+	var err error
+	if isUUID {
+		err = rr.db.First(&result, "id=?", args).Error
+	} else {
+		err = rr.db.First(&result, "name=?", args).Error
+	}
+
 	return result, err
 }
 
-// RESTAURANT REGISTRATION DETAILS
-func (rr *restoRepo) AddRegistrationDetails(args md.RegistrationDetails, restoId primitive.ObjectID) error {
-	filter := bson.M{
-		"_id": restoId,
-	}
-
-	update := bson.M{
-		"$set": bson.M{
-			"registration_details": args,
-			"updated_at":           time.Now(),
-		},
-	}
-
-	result, err := rr.restoCollection.UpdateOne(context.Background(), filter, update)
-
-	if err != nil {
-		return err
-	}
-
-	if result.MatchedCount == 0 || result.ModifiedCount == 0 {
-		return errors.New("failed to add restaurant registration details")
-	}
-	return nil
+/* --------------------- RESTAURANT REGISTRATION DETAILS -------------------- */
+func (rr *restoRepo) AddRegistrationDetails(args md.RegistrationDetails) error {
+	return rr.db.Create(&args).Error
 }
 
-func (rr *restoRepo) AddPaymentDetails(args md.PaymentDetails, restoId primitive.ObjectID) error {
-	filter := bson.M{
-		"_id": restoId,
-	}
+/* -------------------------------------------------------------------------- */
+/*                             Restaurant Payment                             */
+/* -------------------------------------------------------------------------- */
+func (rr *restoRepo) AddPaymentDetails(args md.PaymentDetails) error {
+	return rr.db.Create(&args).Error
+}
+func (rr *restoRepo) UpdatePaymentDetails(args md.PaymentDetails) (md.PaymentDetails, error) {
+	db := rr.db.Session(&gorm.Session{})
 
-	update := bson.M{
-		"$set": bson.M{
-			"payment_details": args,
-			"updated_at":      time.Now(),
-		},
-	}
-	log.Info(filter, update)
-	result, err := rr.restoCollection.UpdateOne(context.Background(), filter, update)
-	if err != nil {
-		return err
-	}
-
-	if result.MatchedCount == 0 || result.ModifiedCount == 0 {
-		return errors.New("failed to add payment details")
-	}
-	return nil
+	result := db.Where("restaurant_id =?", args.RestaurantID).Updates(&args)
+	return args, result.Error
 }
 
-func (rr *restoRepo) UpdateRestaurantAddress(args md.Address, restoId primitive.ObjectID) error {
-	filter := bson.M{
-		"_id": restoId,
-	}
-
-	update := bson.M{
-		"$set": bson.M{
-			"address":    args,
-			"updated_at": time.Now(),
-		},
-	}
-
-	result, err := rr.restoCollection.UpdateOne(context.Background(), filter, update)
-
-	if err != nil {
-		return err
-	}
-
-	if result.ModifiedCount == 0 {
-		return errors.New("failed to update address")
-	}
-	return nil
+/* -------------------------------------------------------------------------- */
+/*                             Restaurant Address                             */
+/* -------------------------------------------------------------------------- */
+func (rr *restoRepo) AddRestaurantAddress(args *md.Address) error {
+	return rr.db.Create(&args).Error
 }
 
-func (rr *restoRepo) UpdateRestaurantContact(args md.Contact, restoId primitive.ObjectID) error {
-	filter := bson.M{
-		"_id": restoId,
-	}
+func (rr *restoRepo) UpdteRestaurantAddress(args *md.Address) error {
 
-	update := bson.M{
-		"$set": bson.M{
-			"contact":    args,
-			"updated_at": time.Now(),
-		},
+	err := rr.db.Model(&md.Address{}).Where("restaurant_id = ?", args.RestaurantID).Updates(&args)
+	if err.RowsAffected == 0 {
+		return errors.New("update failed")
 	}
+	return err.Error
+}
 
-	result, err := rr.restoCollection.UpdateOne(context.Background(), filter, update)
+/* -------------------------------------------------------------------------- */
+/*                             Restaurant Conatct                             */
+/* -------------------------------------------------------------------------- */
+func (rr *restoRepo) AddRestaurantContact(args md.Contact) error {
+	return rr.db.Create(&args).Error
+}
 
-	if err != nil {
-		return err
-	}
-
-	if result.ModifiedCount == 0 {
-		return errors.New("failed to update address")
-	}
-	return nil
+func (rr *restoRepo) UpdateRestaurantContact(args md.Contact) error {
+	db := rr.db.Session(&gorm.Session{})
+	result := db.Where("restaurant_id = ?", args.RestaurantID).Updates(&args)
+	return result.Error
 }
 
 func (rr *restoRepo) UpdateRestaurant(args md.Restaurant, restoId primitive.ObjectID) error {
-	filter := bson.M{
-		"_id": restoId,
-	}
+	// filter := bson.M{
+	// 	"_id": restoId,
+	// }
 
-	update := bson.M{
-		"$set": bson.M{
-			"name":          args.Name,
-			"cuisine_types": args.CuisineTypes,
-			"open_time":     args.OpenTime,
-			"close_time":    args.CloseTime,
-			"updated_at":    time.Now(),
-		},
-	}
+	// update := bson.M{
+	// 	"$set": bson.M{
+	// 		"name":          args.Name,
+	// 		"cuisine_types": args.CuisineTypes,
+	// 		"open_time":     args.OpenTime,
+	// 		"close_time":    args.CloseTime,
+	// 		"updated_at":    time.Now(),
+	// 	},
+	// }
 
-	result, err := rr.restoCollection.UpdateOne(context.Background(), filter, update)
+	// result, err := rr.restoCollection.UpdateOne(context.Background(), filter, update)
 
-	if err != nil {
-		return err
-	}
+	// if err != nil {
+	// 	return err
+	// }
 
-	if result.ModifiedCount == 0 {
-		return errors.New("failed to update address")
-	}
+	// if result.ModifiedCount == 0 {
+	// 	return errors.New("failed to update address")
+	// }
 	return nil
 }
