@@ -2,11 +2,9 @@ name: CI-CD Pipline
 
 on:
   push:
-    branches:
-      - main
+    branches: ["main", "dev"]
   pull_request: 
-    branches:
-      - main
+    branches: ["main", "dev"]
 
 permissions:
   actions: read
@@ -15,6 +13,22 @@ jobs:
   build:
     name: Develop
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: pre_order_food
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -29,6 +43,17 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: "1.23"  
+
+      - name: Checkout Migration Repo
+        uses: actions/checkout@v2
+        with:
+          repository: aniket0951/pre_order_food_migrations
+          ref: main
+          path: pre_order_food_migrations
+
+      - name: run migrations
+        run: pwd && cd pre_order_food_migrations && ls -la && .env && go mod tidy && go run main.go migrate && go run main.go seed
+
 
       - name: Install project dependenies
         run:  pwd && go mod tidy  
