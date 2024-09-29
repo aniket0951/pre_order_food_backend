@@ -16,7 +16,6 @@ jobs:
 
     services:
       postgres:
-        name: postgresql
         image: postgres:14
         env:
           POSTGRES_USER: postgres
@@ -44,6 +43,12 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: "1.23"  
+          
+      - name: Create UUID Function
+        env:
+          PGPASSWORD: postgres
+        run: |
+          echo "CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\";" | psql -h localhost -U postgres -d pre_order_food
 
       - name: Checkout Migration Repo
         uses: actions/checkout@v2
