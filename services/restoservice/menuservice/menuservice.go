@@ -30,6 +30,7 @@ type MenuService interface {
 	CreateItem(req restodto.CreateItemDTO) (restodto.ItemObject, error)
 	UpdateItem(ctx *gin.Context, req restodto.UpdateItemDTO) error
 	ListItemsByMenuCardID(menuCardID string) ([]restodto.ItemObject, error)
+	GetItemByID(itemID string) (restodto.ItemObject, error)
 
 	/* -------------------------------- ItemPrice ------------------------------- */
 	AddItemPrice(req restodto.CreateItemPriceDTO) error
@@ -139,4 +140,27 @@ func (s *menuService) ListMenuCard() ([]restodto.MenuObject, error) {
 	}
 
 	return menuCard, nil
+}
+func (s *menuService) GetItemByID(itemID string) (restodto.ItemObject, error) {
+	objID, err := uuid.Parse(itemID)
+
+	if err != nil {
+		return restodto.ItemObject{}, errors.New("invalid item id")
+	}
+
+	item, err := s.menuRepo.GetItemByID(objID)
+	if err != nil {
+		return restodto.ItemObject{}, err
+	}
+
+	return restodto.ItemObject{
+		Name:        item.Name,
+		Description: item.Description,
+		CategoryID:  item.CategoryID,
+		MenuCardID:  item.MenuCardID,
+		DietaryType: item.DietaryType,
+		IsAvailable: item.IsAvailable,
+		CreatedAt:   item.CreatedAt,
+		UpdatedAt:   item.UpdatedAt,
+	}, nil
 }
